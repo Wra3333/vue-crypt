@@ -10,7 +10,7 @@ async function getTickers(t) {
         return arr;
       }, []);    
       if(!tickers.length) return;
-      const j = await fetch(`https://min-api.cryptocompare.com/data/pricemulti?fsyms=${tickers}&tsyms=USD,UAH,TRY,JPY,EAR,RUB&api_key=${API_KEY}`);
+      const j = await fetch(`https://min-api.cryptocompare.com/data/pricemulti?fsyms=${tickers}&tsyms=USD,UAH,TRY,JPY,EUR,RUB&api_key=${API_KEY}`);
       const data = await j.json();
       console.log(data)
       if (data) {
@@ -25,7 +25,16 @@ async function getTickers(t) {
 async function getAllTickers() {
   const j = await fetch(`https://min-api.cryptocompare.com/data/all/coinlist?summary=true&api_key=${API_KEY}`);
   const result = await j.json();
-  return result;
+  return Object.keys(result.Data);
 }
-
-export { getTickers, getAllTickers };
+async function getTopTickers() {
+  const j = await fetch(`https://min-api.cryptocompare.com/data/top/totalvolfull?limit=10&tsym=USD&api_key=${API_KEY}`);
+  const subRes = await j.json();
+  console.log(subRes)
+  const result = subRes.Data.reduce((arr, item) => {
+    arr.push(item.CoinInfo.Name);
+    return arr;
+  }, []);
+  return result
+}
+export { getTickers, getAllTickers,getTopTickers };

@@ -4,9 +4,9 @@ import Diagram from '@/components/Diagram.vue';
 import Pagination from './components/Pagination.Vue';
 import Dashboard from '@/components/Dashboard.vue';
 import { useValidateTicker } from '@/composables/useValidationTicker.js'
-import { getTickers, getAllTickers } from '@/api.js'
+import { getTickers, getAllTickers, getTopTickers } from '@/api.js'
 
-import { onMounted, ref, computed, watch } from 'vue';
+import { onMounted, ref, computed, watch, watchEffect } from 'vue';
 
 const createdTickers = ref([])
 const allTickers = ref(null)
@@ -18,6 +18,7 @@ const isDuplicateTicker = ref(false)
 const selectedTicker = ref(null)
 
 let selectedCurrency = 'USD'
+let topListTickers = []
 
 const filterList = computed(() => {
     let start = (page.value-1) * 5
@@ -47,17 +48,22 @@ watch(selectedTicker.value, () => {
 onMounted(async () => {
 
     createdTickers.value = JSON.parse(localStorage.getItem('createdTickers')) || []
-
+    
     if(createdTickers.value.length){
         const res = await getTickers(createdTickers)
-        createdTickers.value.forEach(item => {
-            item.course = res[item.name]?.USD || 'not coins'
-        });
+        updateTickersInfo(res)
+        
     }
-
-    const result = await getAllTickers()
-    allTickers.value = Object.keys(result.Data)
+    topListTickers = await getTopTickers() 
+    allTickers.value = await getAllTickers()
 })
+
+function updateTickersInfo(res){
+    createdTickers.value.forEach( (item) => {
+             let {name,currency} = item
+             item.course = res[name]?.[currency] || 'not coins'
+        });
+}
 
 function removeTicker(t) {
     createdTickers.value = createdTickers.value.filter(item => item != t)
@@ -81,11 +87,8 @@ async function addTicker(t,tc) {
         useValidateTicker({ tc,t, createdTickers, allTickers, isDuplicateTicker })
         createdTickers.value.push({ name: t.toUpperCase(), course: "-", currency: selectedCurrency });
         const res = await getTickers(createdTickers)
+        updateTickersInfo(res)
 
-        createdTickers.value.forEach( (item) => {
-             let {name,currency} = item
-             item.course = res[name]?.[currency] || 'not coins'
-        });
 }
 
 </script>
@@ -95,6 +98,7 @@ async function addTicker(t,tc) {
             <Dashboard
               @add-ticker="addTicker"
               @set-active-currecy="setActiveCurrecy"
+              :topListTickers="topListTickers"
               :isDuplicateTicker="isDuplicateTicker"
               :allTickers="allTickers"
             />
