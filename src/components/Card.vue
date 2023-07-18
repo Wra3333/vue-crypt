@@ -1,20 +1,24 @@
 <script setup>
 import Basket from '@/components/icons/Basket.vue'
 
-
 import { toRefs } from 'vue';
 
 defineEmits(['removeTicker','selectTicker'])
-const props = defineProps(['name','course'])
+const props = defineProps(['name','course','currency'])
 const {name,course} = toRefs(props)
+const {currency} = props
 
 
 </script>
 <template>
-    <div class="card" @click="$emit('selectTicker')">
+    <div
+      @click="$emit('selectTicker')"  
+      @keyup.enter="$emit('selectTicker')"  
+      class="card"
+    >
         <div class="card__subtitle">
             <dt class="card__name">
-                {{ name}}
+                {{ name +'-'+ currency}}
             </dt>
             <dd class="card__course">
                {{ course }}
@@ -22,8 +26,11 @@ const {name,course} = toRefs(props)
         </div>
         <div class="card__line"></div>
         <button
-        @click="$emit('removeTicker', name )" 
-        type="button" class="card__button">
+          @click.stop="$emit('removeTicker')" 
+          @keyup.enter.stop
+          type="button" 
+          class="card__button"
+        >
         <basket/>
          Удалить
         </button>
