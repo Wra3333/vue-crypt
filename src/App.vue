@@ -6,7 +6,7 @@ import Dashboard from '@/components/Dashboard.vue';
 import { useValidateTicker } from '@/composables/useValidationTicker.js'
 import { getTickers, getAllTickers, getTopTickers } from '@/api.js'
 
-import { onMounted, ref, computed, watch, watchEffect } from 'vue';
+import { onMounted, ref, computed, watch} from 'vue';
 
 const createdTickers = ref([])
 const allTickers = ref(null)
@@ -21,7 +21,7 @@ let selectedCurrency = 'USD'
 let topListTickers = []
 
 const filterList = computed(() => {
-    let start = (page.value-1) * 5
+    let start = (page.value-1) * 6
     let end = page.value * 6 
     if (createdTickers.value.length == 0) return;
     const res = createdTickers.value?.filter(item => item.name.toLowerCase().includes(filterNameTicker.value.toLowerCase()))
@@ -34,11 +34,9 @@ watch(createdTickers, (newVal, oldVal) => {
     if(newVal.length < oldVal.length){
         selectedTicker.value = null
     }
-
     filterNameTicker.value = ""
     isDuplicateTicker.value = false
     localStorage.setItem('createdTickers', JSON.stringify(createdTickers.value))
-
 }, { deep: true })
 
 watch(selectedTicker.value, () => {
@@ -50,21 +48,25 @@ onMounted(async () => {
     createdTickers.value = JSON.parse(localStorage.getItem('createdTickers')) || []
     
     if(createdTickers.value.length){
-        const res = await getTickers(createdTickers)
-        updateTickersInfo(res)
-        
+        updateTickers()
     }
     topListTickers = await getTopTickers() 
     allTickers.value = await getAllTickers()
 })
 
-function updateTickersInfo(res){
-    createdTickers.value.forEach( (item) => {
-             let {name,currency} = item
-             item.course = res[name]?.[currency] || 'not coins'
-        });
+function updateTickers(){
+    setInterval( async () =>{
+        let res = await getTickers(createdTickers)
+        createdTickers.value.forEach( (item) => {
+            let {name,currency} = item
+            item.course = res[name]?.[currency] || 'not coins'
+        })},1000)
 }
-
+function addTicker(t,tc) {
+    useValidateTicker({ tc,t, createdTickers, allTickers, isDuplicateTicker })
+    createdTickers.value.push({ name: t.toUpperCase(), course: "-", currency: selectedCurrency });
+    updateTickers()
+}
 function removeTicker(t) {
     createdTickers.value = createdTickers.value.filter(item => item != t)
     selectTicker.value = null
@@ -81,14 +83,6 @@ function closeDiagram(){
 }
 function setPage(flag){
     flag?page.value += 1:page.value -= 1
-}
-
-async function addTicker(t,tc) {
-        useValidateTicker({ tc,t, createdTickers, allTickers, isDuplicateTicker })
-        createdTickers.value.push({ name: t.toUpperCase(), course: "-", currency: selectedCurrency });
-        const res = await getTickers(createdTickers)
-        updateTickersInfo(res)
-
 }
 
 </script>
