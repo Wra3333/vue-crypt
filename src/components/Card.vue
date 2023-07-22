@@ -9,6 +9,12 @@ const {name,course} = toRefs(props)
 const {currency} = props
 
 
+function formatPrice(price) {
+      if(price == '-' || price == 'not coins') return price;
+      const res = price < 1?Number(price).toFixed(2):Number(price).toFixed();
+      return String(res).replace(/(\d)(?=(\d\d\d)+([^\d]|$))/g, '$1 ')
+}
+
 </script>
 <template>
     <div
@@ -21,7 +27,7 @@ const {currency} = props
                 {{ name +'-'+ currency}}
             </dt>
             <dd class="card__course">
-               {{ course }}
+               {{ formatPrice(course) }}
             </dd>
         </div>
         <div class="card__line"></div>

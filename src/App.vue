@@ -1,75 +1,130 @@
 <script setup>
 import Card from '@/components/Card.vue';
 import Diagram from '@/components/Diagram.vue';
-import Pagination from './components/Pagination.Vue';
+import Pagination from '@/components/Pagination.Vue';
 import Dashboard from '@/components/Dashboard.vue';
 import { useValidateTicker } from '@/composables/useValidationTicker.js'
 import { getTickers, getAllTickers, getTopTickers } from '@/api.js'
 
-import { onMounted, ref, computed, watch} from 'vue';
+import { onMounted,onUnmounted, ref, computed, watch} from 'vue';
 
 const createdTickers = ref([])
 const allTickers = ref(null)
 const graph = ref([])
 const page = ref(1)
 
-const filterNameTicker = ref('')
+const maxGraphElements=ref(1)
+const graphElement = ref(null)
+
+
+const filterNameTicker = ref("")
 const isDuplicateTicker = ref(false)
 const selectedTicker = ref(null)
 
 let selectedCurrency = 'USD'
 let topListTickers = []
 
+
+const startIndex = computed( () => (page.value - 1) * 6)
+const endIndex = computed( () => page.value * 6)
+
 const filterList = computed(() => {
-    let start = (page.value-1) * 6
-    let end = page.value * 6 
     if (createdTickers.value.length == 0) return;
     const res = createdTickers.value?.filter(item => item.name.toLowerCase().includes(filterNameTicker.value.toLowerCase()))
-    return res.slice(start,end)
+    return res
+})
+
+
+const paginationList = computed( () => {
+    return filterList.value?.slice(startIndex.value,endIndex.value)
+})
+
+watch(() => paginationList.value, () =>{
+
+    if (paginationList.value?.length == 0 && page.value > 1) {
+        page.value -= 1;
+        console.log(page.value)
+    }
 
 })
 
-watch(createdTickers, (newVal, oldVal) => {
+watch(() => createdTickers.value.length, (newVal, oldVal) => {
 
-    if(newVal.length < oldVal.length){
-        selectedTicker.value = null
-    }
-    filterNameTicker.value = ""
-    isDuplicateTicker.value = false
-    localStorage.setItem('createdTickers', JSON.stringify(createdTickers.value))
-}, { deep: true })
+  if(newVal.length < oldVal.length){
+    selectedTicker.value = null
+  }
 
-watch(selectedTicker.value, () => {
+  filterNameTicker.value = ""
+  isDuplicateTicker.value = false
+  localStorage.setItem('createdTickers', JSON.stringify(createdTickers.value))
+
+})
+
+
+watch( () => selectedTicker.value, () => {
     graph.value = []
+
+})
+watch( () => filterNameTicker.value, () => {
+    page.value = 1
+
 })
 
 onMounted(async () => {
-
-    createdTickers.value = JSON.parse(localStorage.getItem('createdTickers')) || []
-    
+    topListTickers = await getTopTickers() 
+    allTickers.value = await getAllTickers()
     if(createdTickers.value.length){
         updateTickers()
     }
-    topListTickers = await getTopTickers() 
-    allTickers.value = await getAllTickers()
+
 })
+onMounted(() => {
+    createdTickers.value = JSON.parse(localStorage.getItem('createdTickers')) ?? []
+    window.addEventListener("resize", calculateMaxGraphElements);
+})
+
+onUnmounted( () =>{
+     window.removeEventListener("resize", calculateMaxGraphElements);
+
+ })
+
+
+
 
 function updateTickers(){
     setInterval( async () =>{
         let res = await getTickers(createdTickers)
         createdTickers.value.forEach( (item) => {
             let {name,currency} = item
-            item.course = res[name]?.[currency] || 'not coins'
-        })},1000)
+            item.course = res[name]?.[currency] ?? 'not coins'
+            if (item == selectedTicker.value) {
+                graph.value.push(item.course);
+                while (graph.value.length > maxGraphElements.value) {
+                  graph.value.shift()
+                }
+
+            }
+        })},2000)
 }
+function calculateMaxGraphElements() {
+      if (!graphElement.value) {
+        return;
+      }
+     return maxGraphElements.value = graphElement.value.diagramColums?.clientWidth / 38;
+}
+
 function addTicker(t,tc) {
+
     useValidateTicker({ tc,t, createdTickers, allTickers, isDuplicateTicker })
     createdTickers.value.push({ name: t.toUpperCase(), course: "-", currency: selectedCurrency });
     updateTickers()
+
 }
 function removeTicker(t) {
     createdTickers.value = createdTickers.value.filter(item => item != t)
-    selectTicker.value = null
+    if(selectedTicker.value == t) {
+        selectedTicker.value = null
+    }
 }
 
 function setActiveCurrecy(c){
@@ -77,6 +132,7 @@ function setActiveCurrecy(c){
 }
 function selectTicker(t) {
     selectedTicker.value = t
+    calculateMaxGraphElements()
 }
 function closeDiagram(){
     selectedTicker.value = null
@@ -102,13 +158,12 @@ function setPage(flag){
                   v-model="filterNameTicker" 
                   type="text" 
                   class="filter__input" 
-                  
                 />
             </div>
-            <hr class="hr" v-if="filterList?.length">
+            <hr class="hr" v-if="createdTickers?.length">
                 <dl class="tickers__list">
                     <Card
-                      v-for="item of filterList"
+                      v-for="item of paginationList"
                       :key="item.id"
                       :name="item.name"
                       :currency="item.currency"
@@ -120,9 +175,17 @@ function setPage(flag){
                     />
             </dl>
             <hr class="hr" v-if="filterList?.length">
-            <Pagination :createdTickers="createdTickers"  @set-page="setPage"/>
+            <Pagination 
+              :createdTickers="createdTickers"  
+              @set-page="setPage"
+              :endIndex="endIndex"
+              :page="page"
+              :filterNameTicker="filterNameTicker"
+            />
             <Diagram
               :selectedTicker="selectedTicker"
+              :graph="graph"
+              ref="graphElement"
               @close-diagram="closeDiagram"
             />
         </div>
