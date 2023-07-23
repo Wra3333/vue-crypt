@@ -15,7 +15,7 @@ const allTickers = ref(null)
 const selectedTicker = ref(null)
 
 // Composables
-const { page, endIndex, setPage, paginationList, filterList, filterNameTicker } = useFilterTickers({ createdTickers })
+const { page, endIndex, setPage, paginationList, filterList, filterNameTicker} = useFilterTickers({ createdTickers })
 const { masGraphPrice, maxGraphElements, graphElement, calcMaxGraphElements } = useGraph()
 const { isDuplicateTicker, searhDuplicapeTicker } = useValidateTicker({ createdTickers, allTickers })
 
@@ -52,6 +52,9 @@ const updateTickers = (function () {
     return function (){
         clearInterval(interval)
         interval = setInterval(async () => {
+            if(!createdTickers.value.length) {
+                clearInterval(interval)
+            }
             let res = await getTickers(createdTickers)
             createdTickers.value.forEach((item) => {
                 let { name, currency } = item
@@ -90,6 +93,10 @@ function selectTicker(ticker) {
 function closeDiagram() {
     selectedTicker.value = null
 }
+function clearAllTickers(){
+    createdTickers.value = []
+    closeDiagram()
+  }
 
 </script>
 <template>
@@ -127,6 +134,7 @@ function closeDiagram() {
             <hr class="hr" v-if="filterList?.length">
             <Pagination 
                 @set-page="setPage" 
+                @clearAllTickers="clearAllTickers"
                 :filterList="filterList"     
                 :endIndex="endIndex" 
                 :page="page"

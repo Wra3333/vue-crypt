@@ -14,6 +14,9 @@ const { filterList, page, endIndex } = toRefs(props)
     <button class="pagination__button" :disabled="!(page > 1)" @click="$emit('setPage', false)">
       Назад
     </button>
+    <button class="pagination__button" @click="$emit('clearAllTickers')">
+      Удалить все
+    </button>
     <button class="pagination__button" :disabled="!(filterList.length > endIndex)" @click="$emit('setPage', true)">
       Вперед
     </button>
