@@ -3,7 +3,7 @@ import Plus from '@/components/icons/Plus.vue'
 
 import { computed, ref, toRefs } from 'vue'
 
-defineEmits(['addTicker,setActiveCurrecy'])
+defineEmits(['addTicker','setActiveCurrecy'])
 const props = defineProps(['isDuplicateTicker', 'allTickers','topListTickers'])
 const { isDuplicateTicker, allTickers } = toRefs(props);
 
@@ -11,7 +11,7 @@ const tickerName = ref('');
 const activeCurrency = ref(0);
 const currencyData = ['USD', 'RUB', 'EUR', 'JPY', 'UAH', 'TRY'];
 
-const searchData = computed(() => {
+const searchCoins = computed(() => {
 
   if (tickerName.value == '') return props.topListTickers
 
@@ -19,7 +19,7 @@ const searchData = computed(() => {
   const exactTickerRegex = new RegExp(`^${tickerName.value}$`, "i");
   let count = 0;
 
-  const filteredTickers = allTickers.value?.filter( item => {
+  const filteredCoins = allTickers.value?.filter( item => {
     const isPartialMatch = tickerRegex.test(item);
     const isExactMatch = exactTickerRegex.test(item);
 
@@ -32,11 +32,10 @@ const searchData = computed(() => {
 
   });
 
-  return filteredTickers;
+  return filteredCoins;
 });
 function setActiveCurrecy(id) {
   activeCurrency.value = id
-  console.log(currencyData[activeCurrency.value])
 }
 
 </script>
@@ -73,7 +72,7 @@ function setActiveCurrecy(id) {
         <div class="dashboard__hint" v-if="allTickers">
           <button 
             class="dashboard__hints" 
-            v-for="(item, id) of searchData" 
+            v-for="(item, id) of searchCoins" 
             :key="id"
             @click="$emit('addTicker', item, currencyData[activeCurrency])">
             {{ item }}

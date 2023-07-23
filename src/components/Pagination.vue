@@ -2,7 +2,7 @@
 <script setup>
 import { toRefs } from 'vue';
 
-defineEmits(['setPage'])
+defineEmits(['setPage','clearAllTickers'])
 const props = defineProps(['filterList', 'endIndex', 'page', 'filterNameTicker'])
 
 

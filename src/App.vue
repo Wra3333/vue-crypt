@@ -72,9 +72,15 @@ const updateTickers = (function () {
 })()
 
 function addTicker(ticker, tickerCurrency) {
-    searhDuplicapeTicker(ticker, tickerCurrency)
-    createdTickers.value.push({ name: ticker.toUpperCase(), course: "-", currency: selectedCurrency });
-    updateTickers()
+    try {
+        searhDuplicapeTicker(ticker, tickerCurrency)
+        createdTickers.value.push({ name: ticker.toUpperCase(), course: "-", currency: selectedCurrency });
+        updateTickers()
+    }
+     catch (e) {
+        console.log(e)
+    }
+        
 }
 function removeTicker(ticker) {
     createdTickers.value = createdTickers.value.filter(item => item != ticker)
