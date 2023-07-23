@@ -13,8 +13,8 @@ export function useFilterTickers({ createdTickers }) {
   }
 
   const filterList = computed(() => {
-    if (createdTickers.value.length == 0) return;
-    const res = createdTickers.value?.filter(item => item.name.toLowerCase().includes(filterNameTicker.value.toLowerCase()))
+    if (createdTickers?.value.length == 0) return;
+    const res = createdTickers?.value?.filter(item => item.name.toLowerCase().includes(filterNameTicker.value.toLowerCase()))
     return res
   })
 

@@ -15,7 +15,6 @@ const allTickers = ref(null)
 const selectedTicker = ref(null)
 
 // Composables
-
 const { page, endIndex, setPage, paginationList, filterList, filterNameTicker } = useFilterTickers({ createdTickers })
 const { masGraphPrice, maxGraphElements, graphElement, calcMaxGraphElements } = useGraph()
 const { isDuplicateTicker, searhDuplicapeTicker } = useValidateTicker({ createdTickers, allTickers })
@@ -48,22 +47,26 @@ onMounted(async () => {
 
 })
 
-function updateTickers() {
-    setInterval(async () => {
-        let res = await getTickers(createdTickers)
-        createdTickers.value.forEach((item) => {
-            let { name, currency } = item
-            item.course = res[name]?.[currency] ?? 'not coins'
-            if (item == selectedTicker.value) {
-                masGraphPrice.value.push(item.course);
-                if (masGraphPrice.value.length > maxGraphElements.value) {
-                    masGraphPrice.value.splice(0, maxGraphElements.value)
+const updateTickers = (function () {
+    let interval
+    return function (){
+        clearInterval(interval)
+        interval = setInterval(async () => {
+            let res = await getTickers(createdTickers)
+            createdTickers.value.forEach((item) => {
+                let { name, currency } = item
+                item.course = res[name]?.[currency] ?? 'not coins'
+                if (item == selectedTicker.value) {
+                    masGraphPrice.value.push(item.course);
+                    if (masGraphPrice.value.length > maxGraphElements.value) {
+                        masGraphPrice.value.splice(0, maxGraphElements.value)
+                    }
+                    
                 }
-
-            }
-        })
-    }, 5000)
-}
+            })
+        }, 3000)
+    }
+})()
 
 function addTicker(ticker, tickerCurrency) {
     searhDuplicapeTicker(ticker, tickerCurrency)
@@ -123,8 +126,8 @@ function closeDiagram() {
             </dl>
             <hr class="hr" v-if="filterList?.length">
             <Pagination 
-                :filterList="filterList" 
                 @set-page="setPage" 
+                :filterList="filterList"     
                 :endIndex="endIndex" 
                 :page="page"
                 :filterNameTicker="filterNameTicker" 

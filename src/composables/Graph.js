@@ -1,4 +1,4 @@
-import { computed, ref, watch,onMounted,onUnmounted } from "vue"
+import { ref, onMounted, onUnmounted } from "vue"
 
 export function useGraph() {
 
@@ -23,4 +23,4 @@ export function useGraph() {
   }
 
   return { masGraphPrice, graphElement, maxGraphElements, calcMaxGraphElements }
-}
+} 
