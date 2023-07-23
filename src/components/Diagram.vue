@@ -1,10 +1,11 @@
 <script setup>
 import Cross from '@/components/icons/Cross.vue'
 
-import { computed, onMounted, ref, toRefs } from 'vue';
+import { computed, ref, toRefs } from 'vue';
+
 defineEmits(['closeDiagram'])
-const props = defineProps(['selectedTicker','graph'])
-const {selectedTicker,graph} = toRefs(props)
+const props = defineProps(['selectedTicker','masGraphPrice'])
+const {selectedTicker,masGraphPrice} = toRefs(props)
 
 const diagramColums = ref(null)
 
@@ -13,14 +14,14 @@ defineExpose({
 })
 
 const normalizeGraph = computed(() =>{
-      let maxValue = Math.max(...graph.value);
-      let minValue = Math.min(...graph.value);
+      let maxValue = Math.max(...masGraphPrice.value);
+      let minValue = Math.min(...masGraphPrice.value);
       if (maxValue === minValue) {
-        return graph.value.map(() => 50);
+        return masGraphPrice.value.map(() => 50);
       }
 
-      return graph.value.map(price => {
-        return 5 + ((price - minValue) * 95) / (maxValue - minValue)
+      return masGraphPrice.value.map(price => {
+        return 25+((price - minValue) * 75) / (maxValue - minValue)
       });
 
 })
@@ -39,7 +40,7 @@ const normalizeGraph = computed(() =>{
           v-for="(item,index) of normalizeGraph"
           :key="index"
           :style="{ height: `${item}%` }"
-          class="bg-purple-800 border w-10 "
+          class="bg-purple-800 border w-3.5 "
         >
         </div>
       </div>
